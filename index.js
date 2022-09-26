@@ -1,5 +1,9 @@
-require('modernlog/patch')
 const config = require('./config.json')
+
+const Gateway = {
+  gateway: require('./src/gateway'),
+  console: require('modernlog/patch')
+}
 
 const Kaspa = {
   client: require('./src/kaspa/client'),
@@ -16,32 +20,39 @@ const RPC = {
   http: require('./src/rpc/http')
 }
 
-const kaspa = new Kaspa.client(config.kaspa.nodeAddress)
-
-console.log('Connecting to Kaspa node...')
-
-kaspa.on('ready', () => {
-  const wallet = new Kaspa.wallet(config.kaspa.wallet)
-
-  console.log('Connected to node, opening wallet...')
-
-  wallet.on('ready', () => {
+const kaspa = new Kaspa.client(config.kaspa.nodeAddress, () => {
+  const wallet = new Kaspa.wallet(config.kaspa.wallet.daemonAddress, () => {
     const listener = new Kaspa.listener()
 
     console.log('Opened wallet successfully, activating listener...')
 
-    listener.on('ready', () => {
-      console.log('Listener activated, starting services...')
+    listener.once('ready', () => {
+      console.log('Listener activated, starting database service...')
       
-      const db = new Database.db(config.database.path, () => {
-        console.log('Started database service')
+      const database = new Database.db(config.database.path, () => {
+        console.log('Started database service, starting gateway...')
+
+        const paymentHandler = new Gateway.gateway({
+          database,
+          kaspa,
+          wallet,
+          listener
+        })
+
+        paymentHandler.once('ready', () => {
+          console.log('Gateway active! starting enabled services...')
+
+          if (config.rpc.http.enabled) {
+            new RPC.http(config.rpc.http.port, () => {
+              console.log(`RPC:HTTP service listening on port ${config.rpc.http.port}.`)
+            })
+          }
+        })
       })
-
-      if (config.rpc.http.enabled) {
-        const rpcHTTP = new RPC.http(config.rpc.http.port)
-
-        console.log(`RPC:HTTP service listening on port ${config.rpc.http.port}`)
-      }
     })
   })
+
+  console.log('Connected to node, opening wallet...')
 })
+
+console.log('Connecting to Kaspa node...')

@@ -3,7 +3,7 @@ const fs = require('fs')
 const { EventEmitter } = require('events')
 
 module.exports = class Server extends EventEmitter {
-  constructor (port) {
+  constructor (port, readyCallback) {
     super()
     
     this.endpoints = new Map()
@@ -14,7 +14,9 @@ module.exports = class Server extends EventEmitter {
     }
 
     this.server = http.createServer((req, res) => this._handleRequest(req, res))
-    this.server.listen(port)
+    this.server.listen(port, () => {
+      readyCallback()
+    })
   }
 
   async _handleRequest (req, res) {

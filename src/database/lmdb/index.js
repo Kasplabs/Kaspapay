@@ -6,7 +6,7 @@ module.exports = class DB {
 
     this.operationQueue = []
 
-    readyCallback()
+    process.nextTick(() => readyCallback())
   }
 
   execute (operation) {
@@ -15,7 +15,8 @@ module.exports = class DB {
     })
 
     this.operationQueue.push(operation)
-
+    process.nextTick(() => this._drainQueue())
+    
     return promise
   }
 
