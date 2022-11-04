@@ -15,7 +15,7 @@
   "rpc": {
     "http": {
       "enabled": true,
-      "port": 1242
+      "port": 25798
     }
   }
 }

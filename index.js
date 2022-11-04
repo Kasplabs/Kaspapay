@@ -22,7 +22,7 @@ const RPC = {
 
 const kaspa = new Kaspa.client(config.kaspa.nodeAddress, () => {
   const wallet = new Kaspa.wallet(config.kaspa.wallet.daemonAddress, () => {
-    const listener = new Kaspa.listener()
+    const listener = new Kaspa.listener(kaspa, 'cfc5ec594a7cf6ec6390442294b321635683d0b1621c4802b4be849f51d6014f')
 
     console.log('Opened wallet successfully, activating listener...')
 
@@ -33,10 +33,10 @@ const kaspa = new Kaspa.client(config.kaspa.nodeAddress, () => {
         console.log('Started database service, starting gateway...')
 
         const paymentHandler = new Gateway.gateway({
-          database,
-          kaspa,
-          wallet,
-          listener
+          database: database,
+          kaspa: kaspa,
+          wallet: wallet,
+          listener: listener
         })
 
         paymentHandler.once('ready', () => {

@@ -33,9 +33,9 @@ module.exports = class Server extends EventEmitter {
     const params = Object.fromEntries(parsedUrl.searchParams)
     
     const data = await this.endpoints.get(parsedUrl.pathname.split('/')[1]).run({
-      params
+      params: params
     })
-    console.log('heeee')
+    
     res.end(JSON.stringify(data))  
   }
 }

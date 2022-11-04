@@ -1,12 +1,15 @@
 const { EventEmitter } = require('events')
 
 module.exports = class Listener extends EventEmitter {
-  constructor (kaspa) {
+  constructor (kaspa, startHash) {
     super()
 
     this.kaspa = kaspa
-    this.listeningAddrs = new Set()
 
+    this.listeningAddrs = new Set()
+    this.currentHash = startHash
+
+    this.listen()
     process.nextTick(() => this.emit('ready'))
   }
 
@@ -18,26 +21,13 @@ module.exports = class Listener extends EventEmitter {
     this.listeningAddrs.delete(kaspaAddress)
   }
 
-  listen () {
-    const cachedBlocks = new Map()
-    const transactionsPerBlock = {}
-    const waitingTransactions = {}
+  async listen () {
+    console.log(await this.kaspa.client.request('getBlocksRequest', {
+      lowHash: this.currentHash,
+      includeBlocks: true,
+      includeTransactions: true
+    }))
 
-    this.kaspa.subscribe('notifyBlockAddedRequest', {}, (data) => {
-      knownBlocks.set(data.block.verboseData.hash, data.block)
-  
-      data.block.transactions.forEach(transaction => {
-        let isRelated = false
-
-        transaction.outputs.forEach(utxo => {
-          if (this.listeningAddrs.has(utxo.verboseData.scriptPublicKeyAddress)) { isRelated = true }
-        })
-  
-        if (!isRelated) return
-  
-        transaction.
-        waitingTransactions[transaction.verboseData.transactionId] = transaction
-      })
-    })
+    this.listen()
   }
 }
