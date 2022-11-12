@@ -5,7 +5,10 @@
       "type": "daemon",
       "daemonAddress": "localhost:5323"
     },
-    "listenerType": "stream"
+    "listener": {
+      "type": "default",
+      "requiredConfirmations": "10"
+    }
   },
   "database": {
     "path": "./storage",

@@ -9,7 +9,7 @@ module.exports = class Operation {
     this.subDB = operation.subDB
     this.key = operation.key
 
-    if (this.type === "set") {
+    if (this.type === 'set') {
       this.value = operation.value
     }
   }

@@ -5,7 +5,7 @@ const { EventEmitter } = require('events')
 module.exports = class Server extends EventEmitter {
   constructor (port, readyCallback) {
     super()
-    
+
     this.endpoints = new Map()
 
     for (const file of fs.readdirSync('./src/rpc/http/endpoints').filter(file => file.endsWith('.js'))) {
@@ -20,22 +20,23 @@ module.exports = class Server extends EventEmitter {
   }
 
   async _handleRequest (req, res) {
-    const parsedUrl = new URL(`https://gatek.kaffinp.xyz${req.url}`)
-  
+    console.log(req.url)
+    const parsedUrl = new URL(`https://payments.kaspa.org${req.url}`)
+
     res.writeHead(200, {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Headers': '*',
-      'version': 'v1.0'
+      version: 'v1.0'
     })
-  
+
     if (!this.endpoints.has(parsedUrl.pathname.split('/')[1]?.toLowerCase())) return res.end('Endpoint not found.')
-  
+
     const params = Object.fromEntries(parsedUrl.searchParams)
-    
+
     const data = await this.endpoints.get(parsedUrl.pathname.split('/')[1]).run({
       params: params
     })
-    
-    res.end(JSON.stringify(data))  
+
+    res.end(JSON.stringify(data))
   }
 }

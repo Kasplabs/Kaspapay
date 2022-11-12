@@ -1,7 +1,7 @@
 const crypto = require('crypto')
 const { EventEmitter } = require('events')
 
-const dbOperation = require('../database/operation')
+const dbInterface = require('./interfaces/database')
 const { statusCodes } = require('./constants')
 
 module.exports = class Gateway extends EventEmitter {
@@ -13,75 +13,46 @@ module.exports = class Gateway extends EventEmitter {
     this.kaspawallet = env.wallet
     this.listener = env.listener
 
-    this.unusedAddress = []
-    this.waitingPayments = new Map()
+    this.gatewayDB = new dbInterface(this.db) 
+    this.unusedAddress = [] ?? this.kaspawallet.getAddresses() // TODO: Check existing payments in startup and remove used addresses
 
     process.nextTick(() => this.emit('ready'))
     this._handlePayments()
   }
 
   async _handlePayments () {
-    if (this.waitingPayments.size === 0) return
+    const payments = await this.gatewayDB.getActivePayments()
+    if (payments.length === 0) return
 
-    for (const paymentId of this.waitingPayments.keys()) {
-      const awaitingPayment = this.waitingPayments.get(paymentId)
+    for (const paymentId of payments) {
+      const payment = await this.gatewayDB.getPayment(paymentId)
 
-      if (awaitingPayment.startDate + (180 * 1000) >= Date.now()) {
-        this.waitingPayments.delete(paymentId)
-
-        this.db.execute(new dbOperation('set', {
-          subDB: 'history',
-          key: paymentId,
-          value: {
-            status: statusCodes.PAYMENT_EXPIRED,
-            ...awaitingPayment
-          }
-        }))
-      }
+      // TODO: HANDLE PAYMENTS
     }
-    
+
     this._handlePayments()
   }
 
   async createPayment (amount) {
-    // TODO: Add checks
+    // TODO: Add checks (& possibly more arguments)
 
+    const paymentId = await this.gatewayDB.generatePaymentId()
     const address = this.unusedAddress.shift() ?? await this.kaspawallet.createAddress()
 
-    const generatePID = async () => {
-      const paymentId = crypto.randomBytes(6).toString('hex')
-    
-      if (this.waitingPayments.has(paymentId) || typeof (await this.db.execute(new dbOperation('get', { subDB: 'history', key: paymentId }))) !== 'undefined') return generatePID()
-      return paymentId
-    }
-
-    const paymentId = await generatePID()
-    this.waitingPayments.set(paymentId, { 
-      startDate: Date.now(),
+    await this.gatewayDB.addPayment(paymentId, {
+      timestamp: Date.now(),
       address: address,
-      amount: amount
+      amount: amount,
+      status: statusCodes.AWAITING_PAYMENT
     })
 
     this._handlePayments()
     return paymentId
   }
-  
+
   async queryPayment (paymentId) {
-    if (!paymentId || Buffer.from(paymentId).length !== 3) throw Error('Invalid payment id.')
+    if (!paymentId || Buffer.from(paymentId).length !== 6) throw Error('Invalid payment id.')
 
-    if (this.waitingPayments.get(paymentId) === 'undefined') {
-      const payment = await this.db.execute(new dbOperation('get', {
-        subDB: 'history',
-        key: paymentId
-      }))
-
-      if (typeof payment === 'undefined') return {}
-      return payment
-    } else {
-      return { 
-        status: statusCodes.AWAITING_PAYMENT,
-        ...this.waitingPayments.get(paymentId)
-      }
-    }
+    return await this.gatewayDB.getPayment(paymentId)
   }
 }

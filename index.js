@@ -7,7 +7,7 @@ const Gateway = {
 
 const Kaspa = {
   client: require('./src/kaspa/client'),
-  listener: require(`./src/kaspa/listeners/${config.kaspa.listenerType}`),
+  listener: require(`./src/kaspa/listeners/${config.kaspa.listener.type}`),
   wallet: require(`./src/kaspa/wallets/${config.kaspa.wallet.type}`)
 }
 
@@ -22,15 +22,17 @@ const RPC = {
 
 const kaspa = new Kaspa.client(config.kaspa.nodeAddress, () => {
   const wallet = new Kaspa.wallet(config.kaspa.wallet.daemonAddress, () => {
-    const listener = new Kaspa.listener(kaspa, 'cfc5ec594a7cf6ec6390442294b321635683d0b1621c4802b4be849f51d6014f')
+    console.log('Opened wallet successfully, starting database service...')
 
-    console.log('Opened wallet successfully, activating listener...')
+    const database = new Database.db(config.database.path, () => {
+      console.log('Started database service, activating listener...')
 
-    listener.once('ready', () => {
-      console.log('Listener activated, starting database service...')
+      // TODO: Check if checkpoint exists from db and if not get pruning point and continue from it.
       
-      const database = new Database.db(config.database.path, () => {
-        console.log('Started database service, starting gateway...')
+      const listener = new Kaspa.listener(kaspa, '3fa82242e322bb7f2556e794328c6705319d4a8edb63975ff945b433ab065595', BigInt(config.kaspa.listener.requiredConfirmations))
+
+      listener.once('ready', () => {
+        console.log('Listener activated, starting gateway...')
 
         const paymentHandler = new Gateway.gateway({
           database: database,
@@ -40,7 +42,7 @@ const kaspa = new Kaspa.client(config.kaspa.nodeAddress, () => {
         })
 
         paymentHandler.once('ready', () => {
-          console.log('Gateway active! starting enabled services...')
+          console.log('Gateway is active! starting enabled services...')
 
           if (config.rpc.http.enabled) {
             new RPC.http(config.rpc.http.port, () => {
