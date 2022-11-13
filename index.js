@@ -45,7 +45,7 @@ const kaspa = new Kaspa.client(config.kaspa.nodeAddress, () => {
           console.log('Gateway is active! starting enabled services...')
 
           if (config.rpc.http.enabled) {
-            new RPC.http(config.rpc.http.port, () => {
+            new RPC.http(config.rpc.http.port, paymentHandler, () => {
               console.log(`RPC:HTTP service listening on port ${config.rpc.http.port}.`)
             })
           }

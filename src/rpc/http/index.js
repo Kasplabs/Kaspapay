@@ -3,9 +3,10 @@ const fs = require('fs')
 const { EventEmitter } = require('events')
 
 module.exports = class Server extends EventEmitter {
-  constructor (port, readyCallback) {
+  constructor (port, gateway, readyCallback) {
     super()
 
+    this.gateway = gateway // TODO: Move to better place?
     this.endpoints = new Map()
 
     for (const file of fs.readdirSync('./src/rpc/http/endpoints').filter(file => file.endsWith('.js'))) {
@@ -20,7 +21,6 @@ module.exports = class Server extends EventEmitter {
   }
 
   async _handleRequest (req, res) {
-    console.log(req.url)
     const parsedUrl = new URL(`https://payments.kaspa.org${req.url}`)
 
     res.writeHead(200, {
@@ -29,14 +29,15 @@ module.exports = class Server extends EventEmitter {
       version: 'v1.0'
     })
 
-    if (!this.endpoints.has(parsedUrl.pathname.split('/')[1]?.toLowerCase())) return res.end('Endpoint not found.')
+    if (!this.endpoints.has(parsedUrl.pathname.split('/')[1])) return res.end('Endpoint not found.')
 
     const params = Object.fromEntries(parsedUrl.searchParams)
 
-    const data = await this.endpoints.get(parsedUrl.pathname.split('/')[1]).run({
-      params: params
+    const response = await this.endpoints.get(parsedUrl.pathname.split('/')[1]).run({
+      params: params,
+      gateway: this.gateway
     })
 
-    res.end(JSON.stringify(data))
+    res.end(JSON.stringify(response.toJSON()))
   }
 }

@@ -1,6 +1,8 @@
 const dbOperation = require('../../database/operation')
 const { statusCodes } = require('../constants')
 
+const crypto = require('crypto')
+
 module.exports = class DatabaseInterface {
   constructor (db) {
     this.db = db
@@ -10,7 +12,7 @@ module.exports = class DatabaseInterface {
     const generatePID = async () => {
       const paymentId = crypto.randomBytes(6).toString('hex')
 
-      if (this.getPayment(paymentId) !== 'undefined') return generatePID()
+      if (await this.getPayment(paymentId) !== undefined) return generatePID()
       return paymentId
     }
 

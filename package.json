@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "kaspajs": "github:GateKVite/Kaspajs",
-    "lmdb": "^2.6.0-alpha7",
+    "lmdb": "^2.6.9",
     "modernlog": "^1.0.2"
   }
 }

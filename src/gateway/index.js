@@ -13,11 +13,17 @@ module.exports = class Gateway extends EventEmitter {
     this.kaspawallet = env.wallet
     this.listener = env.listener
 
-    this.gatewayDB = new dbInterface(this.db) 
-    this.unusedAddress = [] ?? this.kaspawallet.getAddresses() // TODO: Check existing payments in startup and remove used addresses
+    this.gatewayDB = new dbInterface(this.db)
+    this.listener.on('confirmedBlock', (block) => this._handleBlock(block))
+    this.appendedAddresses = new Map()
+    this.unusedAddresses = this.kaspawallet.getAddresses() // TODO: Check existing payments in startup and remove used addresses
 
     process.nextTick(() => this.emit('ready'))
     this._handlePayments()
+  }
+
+  async _handleBlock (block) {
+    console.log(block)
   }
 
   async _handlePayments () {
@@ -27,7 +33,15 @@ module.exports = class Gateway extends EventEmitter {
     for (const paymentId of payments) {
       const payment = await this.gatewayDB.getPayment(paymentId)
 
-      // TODO: HANDLE PAYMENTS
+      if (payment.timestamp + 180 * 1000 > Date.now()) {
+        this.gatewayDB.updatePayment(paymentId, statusCodes.PAYMENT_EXPIRED)
+
+        this.unusedAddresses.push(payment.address)
+        this.appendedAddresses.delete(payment.address)
+      } else {
+        this.unusedAddresses = this.unusedAddresses.filter((address) => { address !== payment.address })
+        this.appendedAddresses.set(payment.address, paymentId)
+      }
     }
 
     this._handlePayments()
@@ -37,7 +51,7 @@ module.exports = class Gateway extends EventEmitter {
     // TODO: Add checks (& possibly more arguments)
 
     const paymentId = await this.gatewayDB.generatePaymentId()
-    const address = this.unusedAddress.shift() ?? await this.kaspawallet.createAddress()
+    const address = this.unusedAddresses.shift() ?? await this.kaspawallet.createAddress()
 
     await this.gatewayDB.addPayment(paymentId, {
       timestamp: Date.now(),
