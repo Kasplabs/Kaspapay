@@ -67,5 +67,3 @@ const kaspa = new Kaspa.client(config.kaspa.nodeAddress, async () => {
 })
 
 console.log('Connecting to Kaspa node...')
-
-process.on('unhandledRejection',console.log)
