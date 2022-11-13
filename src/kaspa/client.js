@@ -17,4 +17,16 @@ module.exports = class Client extends EventEmitter {
     this.readyCallback()
     delete this.readyCallback
   }
+
+  async getBlockDAGInfo () {
+    const dagInfo = await this.client.request('getBlockDagInfoRequest')
+
+    return dagInfo
+  }
+  
+  async getBlock (hash) {
+    const block = await this.client.request('getBlockRequest', { hash: hash })
+
+    return block
+  }
 }

@@ -20,18 +20,27 @@ const RPC = {
   http: require('./src/rpc/http')
 }
 
-const kaspa = new Kaspa.client(config.kaspa.nodeAddress, () => {
-  const wallet = new Kaspa.wallet(config.kaspa.wallet.daemonAddress, () => {
+const kaspa = new Kaspa.client(config.kaspa.nodeAddress, async () => {
+  const wallet = new Kaspa.wallet(config.kaspa.wallet.daemonAddress, async () => {
     console.log('Opened wallet successfully, starting database service...')
 
-    const database = new Database.db(config.database.path, () => {
+    const database = new Database.db(config.database.path, async () => {
       console.log('Started database service, activating listener...')
 
-      // TODO: Check if checkpoint exists from db and if not get pruning point and continue from it.
-      
-      const listener = new Kaspa.listener(kaspa, '3fa82242e322bb7f2556e794328c6705319d4a8edb63975ff945b433ab065595', BigInt(config.kaspa.listener.requiredConfirmations))
+      let checkpoint = await database.execute(new Database.operation('get', {
+        subDB: 'gateway',
+        key: 'checkpoint'
+      }))
 
-      listener.once('ready', () => {
+      if (checkpoint === undefined || await kaspa.getBlock(checkpoint) === null) {
+        const dagInfo = await kaspa.getBlockDAGInfo()
+        
+        checkpoint = dagInfo.pruningPointHash
+      }
+      
+      const listener = new Kaspa.listener(kaspa, checkpoint, BigInt(config.kaspa.listener.requiredConfirmations))
+
+      listener.once('ready', async () => {
         console.log('Listener activated, starting gateway...')
 
         const paymentHandler = new Gateway.gateway({
@@ -58,3 +67,5 @@ const kaspa = new Kaspa.client(config.kaspa.nodeAddress, () => {
 })
 
 console.log('Connecting to Kaspa node...')
+
+process.on('unhandledRejection',console.log)

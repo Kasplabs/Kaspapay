@@ -6,10 +6,10 @@
 * Supports infinite payments per instance in theory.
 * Extendable, modular design.
 * Supports multiple networks(Testnet, mainnet...).
-* Built with a modern RPC api.
+* Built with modern RPC api.
 
 ## Usage
-Install NodeJS 16 from [here](https://nodejs.org/) and install modules by ``npm install`` and just run using ``node index.js`` after configuration or just use a prehosted instance.
+Install NodeJS from [here](https://nodejs.org/) and install modules by ``npm install`` and just run using ``node index.js`` after configuration or just use a prehosted instance.
 
 ### Docs
 Coming soon...
