@@ -9,7 +9,6 @@ module.exports = class Wallet extends EventEmitter {
   }
 
   async getAddresses () {
-    console.log(this.wallet)
     return await this.wallet.getAddresses()
   }
 
