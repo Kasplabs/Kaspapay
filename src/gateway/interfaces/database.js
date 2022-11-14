@@ -25,7 +25,10 @@ module.exports = class DatabaseInterface {
   }
 
   async getPayment (paymentId) {
-    return Payment.fromJSON(await this.db.execute(new dbOperation('get', { subDB: 'payments', key: paymentId, })))
+    const payment = await this.db.execute(new dbOperation('get', { subDB: 'payments', key: paymentId, }))
+    
+    if (typeof payment === 'undefined') return undefined
+    return Payment.fromJSON(payment)
   }
 
   async addPayment (paymentId, payment) {
@@ -43,7 +46,7 @@ module.exports = class DatabaseInterface {
 
     payment.status = status
 
-    const activePayments = await this.getActivePayments()
+    let activePayments = await this.getActivePayments()
     activePayments = activePayments.filter((payment) => { payment !== paymentId })
 
     await this.db.execute(new dbOperation('set', { subDB: 'payments', key: paymentId, value: payment }))

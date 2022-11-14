@@ -3,7 +3,7 @@
     "nodeAddress": "95.217.157.39:16110",
     "wallet": {
       "type": "daemon",
-      "daemonAddress": "localhost:5323"
+      "daemonAddress": "localhost:8082"
     },
     "listener": {
       "type": "default",
@@ -18,7 +18,7 @@
   "rpc": {
     "http": {
       "enabled": true,
-      "port": 25798
+      "port": 26642
     }
   }
 }

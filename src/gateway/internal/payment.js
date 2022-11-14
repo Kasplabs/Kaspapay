@@ -2,6 +2,7 @@ const { statusCodes } = require('../constants')
 
 module.exports = class Payment {
   constructor (address, amount) {
+    if (typeof amount === 'undefined' || !BigInt(amount)) throw Error('Invalid amount.')
     this.timestamp = Date.now()
     this.address = address
     this.amount = amount

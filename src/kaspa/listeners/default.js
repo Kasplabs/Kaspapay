@@ -29,7 +29,7 @@ module.exports = class Listener extends EventEmitter {
       for (const block of chainBlocks) {
         const blockScore = BigInt(block.verboseData.blueScore)
 
-        if (blockScore + confirmations >= blueScore) {
+        if (blockScore + confirmations <= blueScore) {
           this.emit('confirmedBlock', block)
 
           this.currentHash = block.verboseData.hash

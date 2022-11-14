@@ -1,4 +1,3 @@
-const crypto = require('crypto')
 const { EventEmitter } = require('events')
 
 const Payment = require('./internal/payment')
@@ -15,16 +14,33 @@ module.exports = class Gateway extends EventEmitter {
     this.listener = env.listener
 
     this.gatewayDB = new Database(this.db)
-    this.listener.on('confirmedBlock', (block) => this._handleBlock(block))
-    this.appendedAddresses = new Map()
-    this.unusedAddresses = this.kaspawallet.getAddresses()
 
-    process.nextTick(() => this.emit('ready'))
-    this._handlePayments()
+    this.kaspawallet.getAddresses().then(addresses => {
+      this.listener.on('confirmedBlock', (block) => this._handleBlock(block))
+
+      this.appendedAddresses = new Map()
+      this.unusedAddresses = addresses
+
+      process.nextTick(() => this.emit('ready'))
+      this._handlePayments()  
+    })
   }
 
   async _handleBlock (block) {
-    console.log(block)
+    for (const transaction of block.transactions) {
+      for (const output of transaction.outputs) {
+        if (!this.appendedAddresses.has(output.verboseData.scriptPublicKeyAddress)) return
+        
+        const payment = this.gatewayDB.getPayment(this.appendedAddresses.get(output.verboseData.scriptPublicKeyAddress))
+
+        if (payment.amount !== output.amount) return
+
+        this.gatewayDB.updatePayment(paymentId, statusCodes.PAYMENT_COMPLETED)
+
+        this.unusedAddresses.push(payment.address)
+        this.appendedAddresses.delete(payment.address)
+      }
+    }
   }
 
   async _handlePayments () {
@@ -34,7 +50,7 @@ module.exports = class Gateway extends EventEmitter {
     for (const paymentId of payments) {
       const payment = await this.gatewayDB.getPayment(paymentId)
 
-      if (payment.timestamp + 180 * 1000 > Date.now()) {
+      if (payment.timestamp + 180 * 1000 < Date.now()) {
         this.gatewayDB.updatePayment(paymentId, statusCodes.PAYMENT_EXPIRED)
 
         this.unusedAddresses.push(payment.address)
@@ -45,7 +61,7 @@ module.exports = class Gateway extends EventEmitter {
       }
     }
 
-    this._handlePayments()
+    setTimeout(() => this._handlePayments(), 1000)
   }
 
   async createPayment (amount) {
@@ -58,9 +74,12 @@ module.exports = class Gateway extends EventEmitter {
     return paymentId
   }
 
-  async queryPayment (paymentId) {
-    if (!paymentId || Buffer.from(paymentId).length !== 6) throw Error('Invalid payment id.')
+  async getPayment (paymentId) {
+    if (!paymentId) throw Error('Invalid payment id.')
 
-    return await this.gatewayDB.getPayment(paymentId)
+    const payment = await this.gatewayDB.getPayment(paymentId)
+    if (typeof payment === 'undefined') throw Error('Payment not found.')
+
+    return payment
   }
 }

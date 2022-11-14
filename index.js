@@ -41,7 +41,7 @@ const kaspa = new Kaspa.client(config.kaspa.nodeAddress, async () => {
       const listener = new Kaspa.listener(kaspa, checkpoint, BigInt(config.kaspa.listener.requiredConfirmations))
 
       listener.once('ready', async () => {
-        console.log('Listener activated, starting gateway...')
+        console.log('Listener ready, starting gateway...')
 
         const paymentHandler = new Gateway.gateway({
           database: database,

@@ -44,7 +44,7 @@ module.exports = class Server extends EventEmitter {
   
       res.end(JSON.stringify(new Response(response).toJSON()))
     } catch (err) {
-      res.end(JSON.stringify(new ErrorResponse(err).toJSON()))
+      res.end(JSON.stringify(new ErrorResponse(err.message).toJSON()))
     }
   }
 }
