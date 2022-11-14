@@ -2,6 +2,9 @@ const http = require('http')
 const fs = require('fs')
 const { EventEmitter } = require('events')
 
+const Response = require('./responses/default')
+const ErrorResponse = require('./responses/error')
+
 module.exports = class Server extends EventEmitter {
   constructor (port, gateway, readyCallback) {
     super()
@@ -33,11 +36,15 @@ module.exports = class Server extends EventEmitter {
 
     const params = Object.fromEntries(parsedUrl.searchParams)
 
-    const response = await this.endpoints.get(parsedUrl.pathname.split('/')[1]).run({
-      params: params,
-      gateway: this.gateway
-    })
-
-    res.end(JSON.stringify(response.toJSON()))
+    try {
+      const response = await this.endpoints.get(parsedUrl.pathname.split('/')[1]).run({
+        params: params,
+        gateway: this.gateway
+      })
+  
+      res.end(JSON.stringify(new Response(response).toJSON()))
+    } catch (err) {
+      res.end(JSON.stringify(new ErrorResponse(err).toJSON()))
+    }
   }
 }

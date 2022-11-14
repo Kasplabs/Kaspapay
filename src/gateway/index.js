@@ -1,7 +1,8 @@
 const crypto = require('crypto')
 const { EventEmitter } = require('events')
 
-const dbInterface = require('./interfaces/database')
+const Payment = require('./internal/payment')
+const Database = require('./interfaces/database')
 const { statusCodes } = require('./constants')
 
 module.exports = class Gateway extends EventEmitter {
@@ -13,10 +14,10 @@ module.exports = class Gateway extends EventEmitter {
     this.kaspawallet = env.wallet
     this.listener = env.listener
 
-    this.gatewayDB = new dbInterface(this.db)
+    this.gatewayDB = new Database(this.db)
     this.listener.on('confirmedBlock', (block) => this._handleBlock(block))
     this.appendedAddresses = new Map()
-    this.unusedAddresses = this.kaspawallet.getAddresses() // TODO: Check existing payments in startup and remove used addresses
+    this.unusedAddresses = this.kaspawallet.getAddresses()
 
     process.nextTick(() => this.emit('ready'))
     this._handlePayments()
@@ -48,17 +49,10 @@ module.exports = class Gateway extends EventEmitter {
   }
 
   async createPayment (amount) {
-    // TODO: Add checks (& possibly more arguments)
-
     const paymentId = await this.gatewayDB.generatePaymentId()
     const address = this.unusedAddresses.shift() ?? await this.kaspawallet.createAddress()
 
-    await this.gatewayDB.addPayment(paymentId, {
-      timestamp: Date.now(),
-      address: address,
-      amount: amount,
-      status: statusCodes.AWAITING_PAYMENT
-    })
+    await this.gatewayDB.addPayment(paymentId, new Payment(address, amount))
 
     this._handlePayments()
     return paymentId

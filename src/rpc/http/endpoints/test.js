@@ -1,6 +1,6 @@
 module.exports = {
   name: 'test',
   run: async () => {
-    return { result: 'Hello world!' }
+    return { answer: 'Hello world!' }
   }
 }
