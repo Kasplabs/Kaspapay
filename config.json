@@ -10,6 +10,9 @@
       "requiredConfirmations": "10"
     }
   },
+  "gateway": {
+    "payTimeout": 180
+  },
   "database": {
     "path": "./storage",
     "type": "lmdb",

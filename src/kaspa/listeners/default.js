@@ -5,15 +5,14 @@ module.exports = class Listener extends EventEmitter {
     super()
 
     this.kaspa = kaspa
+    this.currentHash = startHash
+    this.currentTimestamp = 0
 
-    this.listen(startHash, confirmations)
+    this._listen(confirmations)
     process.nextTick(() => this.emit('ready'))
   }
 
-  listen (startHash, confirmations) {
-    this.currentHash = startHash
-    this.waitingBlocks = []
-
+  _listen (confirmations) {
     const pollBlocks = async () => {
       const blueScore = BigInt((await this.kaspa.client.request('getVirtualSelectedParentBlueScoreRequest')).blueScore)
 
@@ -33,6 +32,7 @@ module.exports = class Listener extends EventEmitter {
           this.emit('confirmedBlock', block)
 
           this.currentHash = block.verboseData.hash
+          this.currentTimestamp = new Number(block.header.timestamp)
         }
       }
 

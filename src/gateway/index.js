@@ -5,7 +5,7 @@ const Database = require('./interfaces/database')
 const { statusCodes } = require('./constants')
 
 module.exports = class Gateway extends EventEmitter {
-  constructor (env) {
+  constructor (env, payTimeout) {
     super()
 
     this.db = env.database
@@ -22,7 +22,7 @@ module.exports = class Gateway extends EventEmitter {
       this.unusedAddresses = addresses
 
       process.nextTick(() => this.emit('ready'))
-      this._handlePayments()  
+      this._handlePayments(payTimeout)  
     })
   }
 
@@ -43,14 +43,14 @@ module.exports = class Gateway extends EventEmitter {
     }
   }
 
-  async _handlePayments () {
+  async _handlePayments (payTimeout) {
     const payments = await this.gatewayDB.getActivePayments()
     if (payments.length === 0) return
 
     for (const paymentId of payments) {
       const payment = await this.gatewayDB.getPayment(paymentId)
 
-      if (payment.timestamp + 180 * 1000 < Date.now()) {
+      if (payment.timestamp + payTimeout * 1000 < this.listener.currentTimestamp) {
         this.gatewayDB.updatePayment(paymentId, statusCodes.PAYMENT_EXPIRED)
 
         this.unusedAddresses.push(payment.address)
