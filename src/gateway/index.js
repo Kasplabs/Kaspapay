@@ -31,12 +31,13 @@ module.exports = class Gateway extends EventEmitter {
       for (const output of transaction.outputs) {
         if (!this.appendedAddresses.has(output.verboseData.scriptPublicKeyAddress)) return
         
-        const payment = this.gatewayDB.getPayment(this.appendedAddresses.get(output.verboseData.scriptPublicKeyAddress))
+        const payment = await this.gatewayDB.getPayment(this.appendedAddresses.get(output.verboseData.scriptPublicKeyAddress))
 
         if (payment.amount !== output.amount) return
 
-        this.gatewayDB.updatePayment(paymentId, statusCodes.PAYMENT_COMPLETED)
-
+        await this.gatewayDB.updatePayment(paymentId, statusCodes.PAYMENT_COMPLETED)
+        await this.kaspawallet.sendPayment(payment.address, payment.recipient, payment.amount)
+        
         this.unusedAddresses.push(payment.address)
         this.appendedAddresses.delete(payment.address)
       }
@@ -64,11 +65,13 @@ module.exports = class Gateway extends EventEmitter {
     setTimeout(() => this._handlePayments(), 1000)
   }
 
-  async createPayment (amount) {
+  async createPayment (amount, targetAddress) {
+    // TODO: Add a check and if listener is desynced, dont allow.
+    
     const paymentId = await this.gatewayDB.generatePaymentId()
     const address = this.unusedAddresses.shift() ?? await this.kaspawallet.createAddress()
 
-    await this.gatewayDB.addPayment(paymentId, new Payment(address, amount))
+    await this.gatewayDB.addPayment(paymentId, new Payment(address, targetAddress ?? address, amount))
 
     this._handlePayments()
     return paymentId

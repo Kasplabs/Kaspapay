@@ -21,7 +21,7 @@ const RPC = {
 }
 
 const kaspa = new Kaspa.client(config.kaspa.nodeAddress, async () => {
-  const wallet = new Kaspa.wallet(config.kaspa.wallet.daemonAddress, async () => {
+  const wallet = new Kaspa.wallet(config.kaspa.wallet, async () => {
     console.log('Opened wallet successfully, starting database service...')
 
     const database = new Database.db(config.database.path, async () => {
