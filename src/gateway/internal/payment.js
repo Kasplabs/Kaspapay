@@ -1,9 +1,9 @@
 const { statusCodes } = require('../constants')
 
 module.exports = class Payment {
-  constructor (address, recipient, amount) {
+  constructor (daaScore, address, recipient, amount) {
     if (typeof amount === 'undefined' || !BigInt(amount)) throw Error('Invalid amount.')
-    this.timestamp = Date.now()
+    this.daaScore = daaScore
     this.address = address
     this.recipient = recipient
     this.amount = amount
@@ -12,7 +12,7 @@ module.exports = class Payment {
 
   toJSON () {
     return {
-      timestamp: this.timestamp,
+      daaScore: this.daaScore,
       address: this.address,
       recipient: this.recipient,
       amount: this.amount,
@@ -20,10 +20,9 @@ module.exports = class Payment {
     }
   }
 
-  static fromJSON ({ timestamp, recipient, address, amount, status }) {
-    const payment = new Payment(address, recipient, amount)
+  static fromJSON ({ daaScore, recipient, address, amount, status }) {
+    const payment = new Payment(daaScore, address, recipient, amount)
 
-    payment.timestamp = timestamp
     payment.status = status
 
     return payment

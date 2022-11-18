@@ -6,7 +6,7 @@ module.exports = class Listener extends EventEmitter {
 
     this.kaspa = kaspa
     this.currentHash = startHash
-    this.currentTimestamp = 0
+    this.currentDAA = 0
 
     this._listen(confirmations)
     process.nextTick(() => this.emit('ready'))
@@ -32,7 +32,7 @@ module.exports = class Listener extends EventEmitter {
           this.emit('confirmedBlock', block)
 
           this.currentHash = block.verboseData.hash
-          this.currentTimestamp = new Number(block.header.timestamp)
+          this.currentDAA = BigInt(block.header.daaScore)
         }
       }
 

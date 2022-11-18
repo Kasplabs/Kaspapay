@@ -51,7 +51,7 @@ module.exports = class Gateway extends EventEmitter {
     for (const paymentId of payments) {
       const payment = await this.gatewayDB.getPayment(paymentId)
 
-      if (payment.timestamp + payTimeout * 1000 < this.listener.currentTimestamp) {
+      if (payment.daaScore + payTimeout < this.listener.currentDAA) {
         this.gatewayDB.updatePayment(paymentId, statusCodes.PAYMENT_EXPIRED)
 
         this.unusedAddresses.push(payment.address)
