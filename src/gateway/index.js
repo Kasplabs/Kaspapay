@@ -66,12 +66,14 @@ module.exports = class Gateway extends EventEmitter {
   }
 
   async createPayment (amount, targetAddress) {
-    // TODO: Add a check and if listener is desynced, dont allow.
+    const daaScore = await this.kaspa.getBlockDAGInfo().virtualDaaScore
+
+    if (this.listener.daaScore + 600 < daaScore) throw Error("Gateway is not synchronized.")
     
     const paymentId = await this.gatewayDB.generatePaymentId()
     const address = this.unusedAddresses.shift() ?? await this.kaspawallet.createAddress()
 
-    await this.gatewayDB.addPayment(paymentId, new Payment(address, targetAddress ?? address, amount))
+    await this.gatewayDB.addPayment(paymentId, new Payment(daaScore, address, targetAddress ?? address, amount))
 
     this._handlePayments()
     return paymentId
