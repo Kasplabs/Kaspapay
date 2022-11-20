@@ -51,7 +51,7 @@ module.exports = class Gateway extends EventEmitter {
     for (const paymentId of payments) {
       const payment = await this.gatewayDB.getPayment(paymentId)
 
-      if (payment.daaScore + payTimeout < this.listener.currentDAA) {
+      if (BigInt(payment.daaScore) + payTimeout < this.listener.currentDAA) {
         this.gatewayDB.updatePayment(paymentId, statusCodes.PAYMENT_EXPIRED)
 
         this.unusedAddresses.push(payment.address)
@@ -66,9 +66,9 @@ module.exports = class Gateway extends EventEmitter {
   }
 
   async createPayment (amount, targetAddress) {
-    const daaScore = await this.kaspa.getBlockDAGInfo().virtualDaaScore
+    const daaScore = (await this.kaspa.getBlockDAGInfo()).virtualDaaScore
 
-    if (this.listener.daaScore + 600 < daaScore) throw Error("Gateway is not synchronized.")
+    if (this.listener.currentDAA + 600n < BigInt(daaScore)) throw Error("Gateway is not synchronized.")
     
     const paymentId = await this.gatewayDB.generatePaymentId()
     const address = this.unusedAddresses.shift() ?? await this.kaspawallet.createAddress()

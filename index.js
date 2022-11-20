@@ -48,7 +48,7 @@ const kaspa = new Kaspa.client(config.kaspa.nodeAddress, async () => {
           kaspa: kaspa,
           wallet: wallet,
           listener: listener
-        }, config.gateway.payTimeout)
+        }, BigInt(config.gateway.payTimeout))
 
         paymentHandler.once('ready', () => {
           console.log('Gateway is active! starting enabled services...')
