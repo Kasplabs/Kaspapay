@@ -32,9 +32,9 @@ module.exports = class Listener extends EventEmitter {
           this.emit('confirmedBlock', block)
 
           this.currentHash = block.verboseData.hash
-          this.currentDAA = BigInt(block.header.daaScore)
-
           this.emit('updateCheckpoint', this.currentHash)
+
+          this.currentDAA = BigInt(block.header.daaScore)
         }
       }
 
