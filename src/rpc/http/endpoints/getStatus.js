@@ -3,7 +3,7 @@ module.exports = {
   run: async ({ gateway }) => {
     return {
       activePayments: gateway.appendedAddresses.size,
-      currentDAA: gateway.listener.currentDAA
+      currentDAA: gateway.listener.currentDAA.toString()
     }
   }
 }
