@@ -7,13 +7,13 @@ const Gateway = {
 
 const Kaspa = {
   client: require('./src/kaspa/client'),
-  listener: require(`./src/kaspa/listeners/${config.kaspa.listener.type}`),
-  wallet: require(`./src/kaspa/wallets/${config.kaspa.wallet.type}`)
+  listener: require(`./src/kaspa/listener`),
+  wallet: require(`./src/kaspa/wallet`)
 }
 
 const Database = {
-  operation: require('./src/database/operation'),
-  db: require(`./src/database/${config.database.type}`)
+  db: require(`./src/database`),
+  operation: require('./src/database/operation')
 }
 
 const RPC = {
@@ -56,7 +56,7 @@ const kaspa = new Kaspa.client(config.kaspa.nodeAddress, async () => {
           kaspa: kaspa,
           wallet: wallet,
           listener: listener
-        }, BigInt(config.gateway.payTimeout))
+        }, config.gateway.payTimeout)
 
         paymentHandler.once('ready', () => {
           console.log('Gateway is active! starting enabled services...')

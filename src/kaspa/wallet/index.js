@@ -18,6 +18,6 @@ module.exports = class Wallet extends EventEmitter {
   }
 
   async createAddress () {
-    return (await this.wallet.createAddress())[0]
+    return (await this.wallet.createAddress())
   }
 }

@@ -16,27 +16,23 @@ module.exports = class Listener extends EventEmitter {
     const pollBlocks = async () => {
       const blueScore = BigInt((await this.kaspa.client.request('getVirtualSelectedParentBlueScoreRequest')).blueScore)
 
-      const blocks = await this.kaspa.client.request('getBlocksRequest', {
-        lowHash: this.currentHash,
-        includeBlocks: true,
-        includeTransactions: true
-      })
+      const addedChainBlocks = (await this.kaspa.client.request('getVirtualSelectedParentChainFromBlockRequest', {
+        startHash: this.currentHash
+      })).addedChainBlockHashes
 
-      const chainBlocks = blocks.blocks.filter((block) => block.verboseData.isChainBlock)
-      chainBlocks.shift()
-
-      for (const block of chainBlocks) {
+      for (const blockHash of addedChainBlocks) {
+        const block = (await this.kaspa.client.request('getBlockRequest', { hash: blockHash, includeTransactions: true })).block
         const blockScore = BigInt(block.verboseData.blueScore)
 
         if (blockScore + confirmations <= blueScore) {
           this.emit('confirmedBlock', block)
 
           this.currentHash = block.verboseData.hash
-          this.emit('updateCheckpoint', this.currentHash)
-
           this.currentDAA = BigInt(block.header.daaScore)
         }
       }
+
+      this.emit('updateCheckpoint', this.currentHash)
 
       pollBlocks()
     }

@@ -2,12 +2,10 @@
   "kaspa": {
     "nodeAddress": "95.217.157.39:16110",
     "wallet": {
-      "type": "daemon",
       "daemonAddress": "localhost:8082",
       "password": "password"
     },
     "listener": {
-      "type": "default",
       "requiredConfirmations": "10"
     }
   },
@@ -16,7 +14,6 @@
   },
   "database": {
     "path": "./storage",
-    "type": "lmdb",
     "storeHistory": true
   },
   "rpc": {
