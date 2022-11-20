@@ -2,7 +2,7 @@ module.exports = class DefaultResponse {
   constructor(result) {
     this.response = {
       success: true,
-      ...result
+      result
     }
   }
 
