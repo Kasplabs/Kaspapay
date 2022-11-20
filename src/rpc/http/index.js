@@ -32,12 +32,14 @@ module.exports = class Server extends EventEmitter {
       version: 'v1.0'
     })
 
-    if (!this.endpoints.has(parsedUrl.pathname.split('/')[1])) return res.end('Endpoint not found.')
+    const usedEndpoint = parsedUrl.pathname.split('/')[parsedUrl.pathname.split('/').length - 1]
+
+    if (!this.endpoints.has(usedEndpoint)) return res.end('Endpoint not found.')
 
     const params = Object.fromEntries(parsedUrl.searchParams)
 
     try {
-      const response = await this.endpoints.get(parsedUrl.pathname.split('/')[1]).run({
+      const response = await this.endpoints.get(usedEndpoint).run({
         params: params,
         gateway: this.gateway
       })
