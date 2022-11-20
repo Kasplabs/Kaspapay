@@ -62,7 +62,7 @@ module.exports = class Gateway extends EventEmitter {
       }
     }
 
-    setTimeout(() => this._handlePayments(), 1000)
+    setTimeout(() => this._handlePayments(payTimeout), 1000)
   }
 
   async createPayment (amount, targetAddress) {
