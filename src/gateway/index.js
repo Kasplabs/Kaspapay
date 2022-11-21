@@ -56,7 +56,7 @@ module.exports = class Gateway extends EventEmitter {
     for (const paymentId of payments) {
       const payment = await this.gatewayDB.getPayment(paymentId)
 
-      if (BigInt(payment.daaScore) + this.payTimeout < this.listener.currentDAA) {
+      if (BigInt(payment.daaScore) + this.payTimeout + this.listener.confirmationCount < this.listener.currentDAA) { // TODO: Make confirmation gap dynamic by config value
         this.gatewayDB.updatePayment(paymentId, statusCodes.PAYMENT_EXPIRED)
 
         this.unusedAddresses.push(payment.address)

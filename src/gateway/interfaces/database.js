@@ -20,6 +20,10 @@ module.exports = class DatabaseInterface {
     return await generatePID()
   }
 
+  getTotalPayments () {
+    return this.db._db.openDB('payments').getKeysCount()
+  }
+
   async getActivePayments () {
     return (await this.db.execute(new dbOperation('get', { subDB: 'payments', key: "activePayments", }))) ?? []
   }

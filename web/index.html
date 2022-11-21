@@ -18,17 +18,19 @@
       width: 100%;
     }
   </style>
+
+  <script src="./app/index.js"></script>
 </head>
 <body>
   <div style="text-align: center; font-family: 'Rubik', sans-serif; color: rgb(182, 182, 182);">
-    <img src="./icon.png" width="90" height="90">
+    <img src="./app/icon.png" width="90" height="90">
     <h2>Pay using Kaspa</h2>
     <a>Address:</a>
-    <input type="text" value="kaspa:..." style="font-size: 14px; border-style: solid; background-color: rgb(26, 26, 26);" disabled>
+    <input id="paymentAddress" type="text" value="kaspa:..." style="font-size: 14px; border-style: solid; background-color: rgb(26, 26, 26);" disabled>
     <p></p>
-    <a>Amount: ... KAS</a>
+    <a>Amount: <amount id="paymentAmount">...</amount> KAS</a>
     <p></p>
-    <a style="font-size: small;">Time left: ... sec.</a>
+    <a id="paymentStatus" style="font-size: small;">Time left: <countdown id="secondsLeft">...</countdown>~ sec.</a>
     <div style="font-size: small" class="footer">Powered by Kaspapay</div>
   </div>
 </body>

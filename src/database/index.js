@@ -2,7 +2,7 @@ const lmdb = require('lmdb')
 
 module.exports = class DB {
   constructor (path, readyCallback) {
-    this.db = lmdb.open(path)
+    this._db = lmdb.open(path)
 
     this.operationQueue = []
 
@@ -26,9 +26,9 @@ module.exports = class DB {
     const operation = this.operationQueue.shift()
 
     if (operation.type === 'get') {
-      operation.resolve(this.db.openDB(operation.subDB).get(operation.key))
+      operation.resolve(this._db.openDB(operation.subDB).get(operation.key))
     } else if (operation.type === 'set') {
-      await (this.db.openDB(operation.subDB)).put(operation.key, operation.value)
+      await (this._db.openDB(operation.subDB)).put(operation.key, operation.value)
       operation.resolve(true)
     }
 
