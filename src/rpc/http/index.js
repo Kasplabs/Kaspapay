@@ -44,9 +44,9 @@ module.exports = class Server extends EventEmitter {
         gateway: this.gateway
       })
   
-      res.end(JSON.stringify(new Response(response).toJSON(), null, 4))
+      res.end(JSON.stringify(new Response(response).toJSON(), null, 2))
     } catch (err) {
-      res.end(JSON.stringify(new ErrorResponse(err.message).toJSON(), null, 4))
+      res.end(JSON.stringify(new ErrorResponse(err.message).toJSON(), null, 2))
     }
   }
 }

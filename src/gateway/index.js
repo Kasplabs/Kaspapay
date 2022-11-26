@@ -5,7 +5,7 @@ const Database = require('./interfaces/database')
 const { statusCodes } = require('./constants')
 
 module.exports = class Gateway extends EventEmitter {
-  constructor (env, payTimeout) {
+  constructor (env, config) {
     super()
 
     this.db = env.database
@@ -21,7 +21,7 @@ module.exports = class Gateway extends EventEmitter {
       this.appendedAddresses = new Map()
       this.unusedAddresses = addresses
 
-      this.payTimeout = BigInt(payTimeout)
+      this.config = config
 
       process.nextTick(() => this.emit('ready'))
       this._handlePayments()  
@@ -38,7 +38,7 @@ module.exports = class Gateway extends EventEmitter {
           if (payment.amount === output.amount) {
             await this.gatewayDB.updatePayment(paymentId, statusCodes.PAYMENT_COMPLETED)
             if (payment.address !== payment.recipient) {
-              await this.kaspawallet.sendPayment(payment.address, payment.recipient, payment.amount)
+              await this.kaspawallet.sendPayment(payment.address, payment.recipient, (BigInt(payment.amount) - BigInt(this.config.fee)).toString())
             }
             
             this.unusedAddresses.push(payment.address)
@@ -56,8 +56,8 @@ module.exports = class Gateway extends EventEmitter {
     for (const paymentId of payments) {
       const payment = await this.gatewayDB.getPayment(paymentId)
 
-      if (BigInt(payment.daaScore) + this.payTimeout + this.listener.confirmationCount < this.listener.currentDAA) { // TODO: Make confirmation gap dynamic by config value
-        this.gatewayDB.updatePayment(paymentId, statusCodes.PAYMENT_EXPIRED)
+      if (BigInt(payment.daaScore) + BigInt(this.config.expirationTime) + this.listener.confirmationCount < this.listener.currentDAA) {
+        await this.gatewayDB.updatePayment(paymentId, statusCodes.PAYMENT_EXPIRED)
 
         this.unusedAddresses.push(payment.address)
         this.appendedAddresses.delete(payment.address)

@@ -10,7 +10,8 @@
     }
   },
   "gateway": {
-    "payTimeout": 180
+    "expirationTime": 180,
+    "fee": "500000"
   },
   "database": {
     "path": "./storage",
