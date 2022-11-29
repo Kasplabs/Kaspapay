@@ -51,7 +51,7 @@ module.exports = class DatabaseInterface {
     payment.status = status
 
     let activePayments = await this.getActivePayments()
-    activePayments = activePayments.filter((payment) => { payment !== paymentId })
+    activePayments = activePayments.filter((payment) => { return payment !== paymentId })
 
     await this.db.execute(new dbOperation('set', { subDB: 'payments', key: paymentId, value: payment }))
     await this.db.execute(new dbOperation('set', { subDB: 'payments', key: 'activePayments', value: activePayments }))
