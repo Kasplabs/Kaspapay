@@ -51,11 +51,10 @@ module.exports = class Gateway extends EventEmitter {
   }
 
   async _handlePayments () {
-    if (this.isActive === true) return
-    this.isActive = true
-    
     const payments = await this.gatewayDB.getActivePayments()
-    if (payments.length === 0) return
+    
+    if (this.isActive === true || payments.length === 0) return
+    this.isActive = true
 
     for (const paymentId of payments) {
       const payment = await this.gatewayDB.getPayment(paymentId)
