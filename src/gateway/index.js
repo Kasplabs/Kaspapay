@@ -18,6 +18,7 @@ module.exports = class Gateway extends EventEmitter {
     this.kaspawallet.getAddresses().then(addresses => {
       this.listener.on('confirmedBlock', (block) => this._handleBlock(block))
 
+      this.isActive = false
       this.appendedAddresses = new Map()
       this.unusedAddresses = addresses
 
@@ -50,6 +51,9 @@ module.exports = class Gateway extends EventEmitter {
   }
 
   async _handlePayments () {
+    if (this.isActive === true) return
+    this.isActive = true
+    
     const payments = await this.gatewayDB.getActivePayments()
     if (payments.length === 0) return
 
@@ -67,10 +71,11 @@ module.exports = class Gateway extends EventEmitter {
       }
     }
 
+    this.isActive = false
     setTimeout(() => this._handlePayments(), 1000)
   }
 
-  async createPayment (amount, recipient) {
+  async createPayment (amount, merchant) {
     const daaScore = (await this.kaspa.getBlockDAGInfo()).virtualDaaScore
 
     if (this.listener.currentDAA + 600n < BigInt(daaScore)) throw Error("Gateway is not synchronized.")
@@ -78,7 +83,7 @@ module.exports = class Gateway extends EventEmitter {
     const paymentId = await this.gatewayDB.generatePaymentId()
     const address = this.unusedAddresses.shift() ?? await this.kaspawallet.createAddress()
     
-    await this.gatewayDB.addPayment(paymentId, new Payment(daaScore, address, recipient ?? address, amount))
+    await this.gatewayDB.addPayment(paymentId, new Payment(daaScore, merchant ?? address, address, amount))
 
     this._handlePayments()
     return paymentId
