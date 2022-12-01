@@ -25,12 +25,12 @@ module.exports = class DatabaseInterface {
   }
 
   async getActivePayments () {
-    return (await this.db.execute(new dbOperation('get', { subDB: 'payments', key: "activePayments", }))) ?? []
+    return (await this.db.execute(new dbOperation('get', { subDB: 'payments', key: 'activePayments' }))) ?? []
   }
 
   async getPayment (paymentId) {
-    const payment = await this.db.execute(new dbOperation('get', { subDB: 'payments', key: paymentId, }))
-    
+    const payment = await this.db.execute(new dbOperation('get', { subDB: 'payments', key: paymentId }))
+
     if (typeof payment === 'undefined') return undefined
     return Payment.fromJSON(payment)
   }
@@ -44,9 +44,9 @@ module.exports = class DatabaseInterface {
   }
 
   async updatePayment (paymentId, status) {
-    const payment = await this.db.execute(new dbOperation('get', { subDB: 'payments', key: paymentId, }))
+    const payment = await this.db.execute(new dbOperation('get', { subDB: 'payments', key: paymentId }))
 
-    if (payment.status !== statusCodes.AWAITING_PAYMENT) throw Error(`It's a finalized payment`)
+    if (payment.status !== statusCodes.AWAITING_PAYMENT) throw Error('It\'s a finalized payment')
 
     payment.status = status
 

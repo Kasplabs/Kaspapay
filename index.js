@@ -7,12 +7,12 @@ const Gateway = {
 
 const Kaspa = {
   client: require('./src/kaspa/client'),
-  listener: require(`./src/kaspa/listener`),
-  wallet: require(`./src/kaspa/wallet`)
+  listener: require('./src/kaspa/listener'),
+  wallet: require('./src/kaspa/wallet')
 }
 
 const Database = {
-  db: require(`./src/database`),
+  db: require('./src/database'),
   operation: require('./src/database/operation')
 }
 
@@ -34,10 +34,10 @@ const kaspa = new Kaspa.client(config.kaspa.nodeAddress, async () => {
 
       if (checkpoint === undefined || await kaspa.getBlock(checkpoint) === null) {
         const dagInfo = await kaspa.getBlockDAGInfo()
-        
+
         checkpoint = dagInfo.pruningPointHash
       }
-      
+
       const listener = new Kaspa.listener(kaspa, checkpoint, BigInt(config.kaspa.listener.requiredConfirmations))
 
       listener.once('ready', async () => {

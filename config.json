@@ -14,8 +14,7 @@
     "fee": "500000"
   },
   "database": {
-    "path": "./storage",
-    "storeHistory": true
+    "path": "./storage"
   },
   "rpc": {
     "http": {

@@ -23,7 +23,7 @@ module.exports = class Client extends EventEmitter {
 
     return dagInfo
   }
-  
+
   async getBlock (hash) {
     const block = await this.client.request('getBlockRequest', { hash: hash })
 

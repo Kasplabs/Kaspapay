@@ -2,8 +2,7 @@ const http = require('http')
 const fs = require('fs')
 const { EventEmitter } = require('events')
 
-const Response = require('./responses/default')
-const ErrorResponse = require('./responses/error')
+const { Response, ErrorResponse } = require('./responses')
 
 module.exports = class Server extends EventEmitter {
   constructor (port, gateway, readyCallback) {
@@ -43,7 +42,7 @@ module.exports = class Server extends EventEmitter {
         params: params,
         gateway: this.gateway
       })
-  
+
       res.end(JSON.stringify(new Response(response).toJSON(), null, 2))
     } catch (err) {
       res.end(JSON.stringify(new ErrorResponse(err.message).toJSON(), null, 2))

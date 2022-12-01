@@ -3,6 +3,7 @@ const { statusCodes } = require('../constants')
 module.exports = class Payment {
   constructor (daaScore, merchant, address, amount) {
     if (typeof amount === 'undefined' || !BigInt(amount)) throw Error('Invalid amount.')
+    
     this.daaScore = daaScore
     this.merchant = merchant
     this.address = address
