@@ -9,7 +9,8 @@
       "requiredConfirmations": "10"
     }
   },
-  "gateway": {
+  "payment": {
+    "dataLimit": 32,
     "expirationTime": 180,
     "fee": "500000"
   },

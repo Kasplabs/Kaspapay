@@ -1,28 +1,30 @@
 const { statusCodes } = require('../constants')
 
 module.exports = class Payment {
-  constructor (daaScore, merchant, address, amount) {
+  constructor (daaScore, paymentAddress, merchantAddress, amount, data) {
     if (typeof amount === 'undefined' || !BigInt(amount)) throw Error('Invalid amount.')
     
     this.daaScore = daaScore
-    this.merchant = merchant
-    this.address = address
+    this.paymentAddress = paymentAddress
+    this.merchantAddress = merchantAddress
     this.amount = amount
+    this.data = data
     this.status = statusCodes.AWAITING_PAYMENT
   }
 
   toJSON () {
     return {
       daaScore: this.daaScore,
-      merchant: this.merchant,
-      address: this.address,
+      paymentAddress: this.paymentAddress,
+      merchantAddress: this.merchantAddress,
       amount: this.amount,
+      data: this.data,
       status: this.status
     }
   }
 
-  static fromJSON ({ daaScore, merchant, address, amount, status }) {
-    const payment = new Payment(daaScore, merchant, address, amount)
+  static fromJSON ({ daaScore, paymentAddress, merchantAddress, amount, data, status }) {
+    const payment = new Payment(daaScore, paymentAddress, merchantAddress, amount, data)
 
     payment.status = status
 

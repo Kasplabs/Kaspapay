@@ -29,16 +29,37 @@ module.exports = class Gateway extends EventEmitter {
     })
   }
 
+  async _handleBlock (block) {
+    for (const transaction of block.transactions) {
+      for (const output of transaction.outputs) {
+        if (this.appendedAddresses.has(output.verboseData.scriptPublicKeyAddress)) {
+          const paymentId = this.appendedAddresses.get(output.verboseData.scriptPublicKeyAddress)
+          const payment = await this.gatewayDB.getPayment(paymentId)
+  
+          if (payment.amount === output.amount) {
+            await this.gatewayDB.updatePayment(paymentId, statusCodes.PAYMENT_COMPLETED)
+            if (payment.address !== payment.recipient) {
+              await this.kaspawallet.sendPayment(payment.address, payment.recipient, (BigInt(payment.amount) - BigInt(this.config.fee)).toString())
+            }
+            
+            this.unusedAddresses.push(payment.address)
+            this.appendedAddresses.delete(payment.address)
+          }
+        }
+      }
+    }
+  }
 
-  async createPayment (amount, merchant) {
+  async createPayment (merchantAddress, amount, data) {
     const daaScore = (await this.kaspa.getBlockDAGInfo()).virtualDaaScore
 
     if (this.listener.currentDAA + 600n < BigInt(daaScore)) throw Error('Gateway is not synchronized.')
+    if (Buffer.from(data).length <= this.config.dataLimit) throw Error('Too much data.')
 
     const paymentId = await this.gatewayDB.generatePaymentId()
-    const address = this.unusedAddresses.shift() ?? await this.kaspawallet.createAddress()
+    const paymentAddress = this.unusedAddresses.shift() ?? await this.kaspawallet.createAddress()
 
-    await this.gatewayDB.addPayment(paymentId, new Payment(daaScore, merchant ?? address, address, amount))
+    await this.gatewayDB.addPayment(paymentId, new Payment(daaScore, paymentAddress, merchantAddress ?? paymentAddress, amount, data))
 
     this._handlePayments()
     return paymentId
@@ -51,5 +72,29 @@ module.exports = class Gateway extends EventEmitter {
     if (typeof payment === 'undefined') throw Error('Payment not found.')
 
     return payment
+  }
+
+  async _handlePayments () {
+    const payments = await this.gatewayDB.getActivePayments()
+
+    if (this.isActive === true || payments.length === 0) return
+    this.isActive = true
+
+    for (const paymentId of payments) {
+      const payment = await this.gatewayDB.getPayment(paymentId)
+
+      if (BigInt(payment.daaScore) + BigInt(this.config.expirationTime) + this.listener.confirmationCount < this.listener.currentDAA) {
+        await this.gatewayDB.updatePayment(paymentId, statusCodes.PAYMENT_EXPIRED)
+
+        this.unusedAddresses.push(payment.address)
+        this.appendedAddresses.delete(payment.address)
+      } else {
+        this.unusedAddresses = this.unusedAddresses.filter((address) => { return address !== payment.address })
+        this.appendedAddresses.set(payment.address, paymentId)
+      }
+    }
+
+    this.isActive = false
+    setTimeout(() => this._handlePayments(), 1000)
   }
 }
