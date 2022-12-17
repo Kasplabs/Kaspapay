@@ -54,7 +54,7 @@ module.exports = class Gateway extends EventEmitter {
     const daaScore = (await this.kaspa.getBlockDAGInfo()).virtualDaaScore
 
     if (this.listener.currentDAA + 600n < BigInt(daaScore)) throw Error('Gateway is not synchronized.')
-    if (Buffer.from(data).length <= this.config.dataLimit) throw Error('Too much data.')
+    if (Buffer.from(data ?? []).length > this.config.dataLimit) throw Error('Too much data.')
 
     const paymentId = await this.gatewayDB.generatePaymentId()
     const paymentAddress = this.unusedAddresses.shift() ?? await this.kaspawallet.createAddress()
