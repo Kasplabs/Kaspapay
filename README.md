@@ -12,4 +12,4 @@
 Install NodeJS from [here](https://nodejs.org/) and install modules by ``npm install`` and just run using ``node index.js`` after configuration or just use a prehosted instance.
 
 ### Docs
-[Here](https://docs.kaspapay.kaffinp.xyz/)
+[Here](https://kaffinpx.gitbook.io/kaspapay)
